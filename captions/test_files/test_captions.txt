@@ -1,0 +1,6 @@
+a5b.jpg#0	A man .
+a5b.jpg#1	Two racer .
+a5b.jpg#2	Two motorist .
+40f.jpg#0	A firefighter .
+40f.jpg#1	a fireman 
+40f.jpg#2	A fireman .
