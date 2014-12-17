@@ -5,16 +5,25 @@ from scipy import linalg
 from numpy import linalg as LA
 
 #multi-view CCA
+#parameters : 
+#X = concatenation of all feature matrices
+#index = [1,1,1,2,2] for example = 1 is for visual features, 2 for tag features (keeps the dimensions in mind)
+#reg is for regularization, not necessary at first
+#output :
+#V=projection matrix
+#D=diagonal matrix for projection
 def CCA(X,index,reg) :
     C_all=np.matrix(np.cov(np.array(X.transpose())))
     C_diag=np.zeros(C_all.shape)
     print("done covariance matrix 1")
     print(index)
     for i in range(np.amax(index)) :
-        index_f=np.where(index==i)[0]
-        #add regularization here
-        C_diag[index_f,index_f]=C_all[index_f,index_f]+reg*np.eye(index_f.size,index_f.size)[index_f,index_f]
-        C_all[index_f,index_f]=C_all[index_f,index_f]+reg*np.eye(index_f.size,index_f.size)[index_f,index_f]
+        indices=np.where(index==i+1)[0]
+        for j in range(indices.shape[0]) : 
+            index_f=indices[j]
+            #add regularization here
+            C_diag[index_f,index_f]=C_all[index_f,index_f]#+reg*np.eye((indices.shape[0],indices.shape[0]))[index_f,index_f]
+            C_all[index_f,index_f]=C_all[index_f,index_f]#+reg*np.eye((indices.shape[0],indices.shape[0]))[index_f,index_f]
     print("done covariance matrix 2")
     print(C_all)
     print(C_diag)
@@ -25,11 +34,14 @@ def CCA(X,index,reg) :
             C_diag[i,j]=float(C_diag[i,j])
             
     [D,V]=linalg.eig(C_all,C_diag)
-
+    #print(D)
     print("done eigen decomposition")
     a=-np.sort(-np.diag(D))#sort in descending order
+    #print(a)
     index=np.argsort(-np.diag(D))[0,:]
-    D=np.diag(a)
+    #D=np.diag(a)
+    #print(D)
+    D=a
     V=V[:,index]
     return[V,D]
 
@@ -39,29 +51,24 @@ def normalize(X) :
     return X
 
 #euclidian distance       
-def dist_pyth(P1,P2) :
+def dist_eucl(P1,P2) :
     P1=np.mat(P1)
     P2=np.mat(P2)
-    D = -2*P1*P2.conj().transpose()
-    #D=np.zeros(P1.shape[0])
-    n1=np.zeros(P1.shape[0])
-    n2=np.zeros(P2.shape[0])
-    for i in range(P1.shape[0]) :
-       n1[i]=LA.norm(P1[i])
-    for i in range(P2.shape[0]) :
-        n2[i]=LA.norm(P2[i])
-
-    for i in range(P1.shape[0]) :
-        for j in range(P2.shape[0]) :
-            D[i,j]=D[i,j]+n1[i]*n1[i]+n2[j]*n2[j]#-2*n1[i]*n2[i]
-    #dist=0
-    for i in range(P1.shape[0]) :
-        for j in range(P2.shape[0]) :
-            D[i,j]=np.math.sqrt(D[i,j])
-           
-    return D
+    dist_square=np.zeros(P1.shape[1])
+    for i in range(P1.shape[1]) :
+        dist_square[i]=(P1[0,i]-P2[0,i])*(P1[0,i]-P2[0,i])
+    d=0
+    for i in range(P1.shape[1]) :
+        d=d+dist_square[i]
+    return d
 
 #CCA 2-views
+#parameters :
+#X=view 1 (eg result of neural networks for visual features)
+#T=view 2 (eg result of LDA)
+#output :
+#Wx=projection matrix (concatenation of the projection matrices of the 2 features)
+#to have the actual projection, do : P=[X,T]*Wx*D, and we can use P[:,index_of_feature] to retrieve the projection for the feature we want
 def CCA2(X,T) :
     #T.todense()
     XX=np.concatenate((X,T),axis=1)#[X,T]
@@ -69,22 +76,7 @@ def CCA2(X,T) :
     [V,D]=CCA(XX,index,0.0001)
     D=np.mat(D)
     Wx=V
- #   Wx=V[0,:]
-#    for i in range(X.shape[1]-1) :
-#        Wx=np.concatenate((Wx,V[i+1,:]))
-#    Dx=[D[0]]
-#    for i in range(X.shape[1]-1) :
-#        Dx=np.concatenate((Dx,[D[i+1]]))
-#    Projection_x=X*Wx*Dx
-#    Wy=V[0,:]
-#    for i in range(X.shape[1]-1) : 
-#        Wy=np.concatenate((Wx,V[i+1+X.shape[1],:]))
-#    Dy=[D[0]]
-#    for i in range(X.shape[1]-1) :
-#        Dy=np.concatenate((Dy,[D[i+1+X.shape[1]]]))
-#    Projection_y=X*Wy*Dy
-    Projection=XX*Wx*D.transpose()
-    return Projection
+    return [Wx,D]
 
 #def CCA3(X,T,Y) :
 #    T=full(T)
@@ -95,14 +87,13 @@ def CCA2(X,T) :
 #    return [Wx,D]
 
 
-#basic nearest neighbor (to do image-to-image, tag-to-image and tag-to-tag retrieval)
-def NN(P1,P2) :
-    #dist=np.zeros(Wx.shape[0])
-    #Wx=np.sort(Wx)
-    #for i in range(0,Wx.shape[0]-2) :
-    #    dist[i]=dist_pyth(Wx[i,:],Wx[i+1,:])
-    #ordered=np.sort(dist)
-    #Nearest=dist[0]
-    dist=dist_pyth(P1,P2)
-    Nearest=np.sort(dist)[0]
+#nearest neighbor :
+#X=matrix of features for all images projected in the latent space (dim(X)=(nb of images,dimension of the latent space))
+#target = vector of features in the latent space of the tag or image we want to find (dim(target)=(1,dimension of the latent space))
+def NN(X,target) :
+    dist=np.zeros(X.shape[0])
+    for i in range(X.shape[0]) :
+        dist[i]=dist_eucl(X[i,:],target)
+    nearest_index=np.argsort(dist)[0]
+    Nearest=X[nearest_index]
     return Nearest
