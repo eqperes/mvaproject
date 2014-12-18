@@ -34,7 +34,9 @@ def CCA(X,index,reg) :
             C_diag[i,j]=float(C_diag[i,j])
             
     [D,V]=linalg.eig(C_all,C_diag)
+    D=D.real
     #print(D)
+    #print(V)
     print("done eigen decomposition")
     a=-np.sort(-np.diag(D))#sort in descending order
     #print(a)
