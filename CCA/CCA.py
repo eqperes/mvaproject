@@ -22,8 +22,8 @@ def CCA(X,index,reg) :
         for j in range(indices.shape[0]) : 
             index_f=indices[j]
             #add regularization here
-            C_diag[index_f,index_f]=C_all[index_f,index_f]#+reg*np.eye((indices.shape[0],indices.shape[0]))[index_f,index_f]
-            C_all[index_f,index_f]=C_all[index_f,index_f]#+reg*np.eye((indices.shape[0],indices.shape[0]))[index_f,index_f]
+            C_diag[index_f,index_f]=C_all[index_f,index_f]+reg*np.eye(C_all.shape[0],C_all.shape[1])[index_f,index_f]
+            C_all[index_f,index_f]=C_all[index_f,index_f]+reg*np.eye(C_all.shape[0],C_all.shape[1])[index_f,index_f]
     print("done covariance matrix 2")
     print(C_all)
     print(C_diag)
@@ -34,16 +34,14 @@ def CCA(X,index,reg) :
             C_diag[i,j]=float(C_diag[i,j])
             
     [D,V]=linalg.eig(C_all,C_diag)
-    D=D.real
     #print(D)
     #print(V)
     print("done eigen decomposition")
-    a=-np.sort(-np.diag(D))#sort in descending order
+    a=-np.sort(-D,axis=0)#sort in descending order
     #print(a)
     index=np.argsort(-np.diag(D))[0,:]
-    #D=np.diag(a)
+    D=np.diag(a)
     #print(D)
-    D=a
     V=V[:,index]
     return[V,D]
 
