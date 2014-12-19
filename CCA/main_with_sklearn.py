@@ -32,11 +32,15 @@ ldafy = np.array(ldafy)
 # [Wx,D]=CCA.CCA2(X,ldafy)
 # XX=np.concatenate((X,ldafy),axis=1)
 
-import pdb
-pdb.set_trace()
-
-my_cca = CCA(n_components=30)
+my_cca = CCA(n_components=15)
 my_cca.fit(X, ldafy)
+
+all_scores = np.zeros(names.shape[0], names.shape[0])
+for k in range(0, names.shape[0]):
+	j = 0
+	for name in names:
+		all_scores[k][j] = my_cca.score(X[k], T[name[0][0]])
+		j = j + 1
 
 img_features_test=sio.loadmat('../../layers /layer22/Flickr_8k.testImages.mat')
 feat_test=img_features_test['features']
@@ -48,14 +52,16 @@ for i in range(0,feat_test.shape[0]-1) :
 
 ldafy_test = {}
 names = img_features_test["names"]
-scores = []
 
-j = 0
-for name in names:
-	print name[0][0]
-	ldafy_test[name[0][0]] = T[name[0][0]]
-	scores.append(my_cca.score(X_test[500], T[name[0][0]]))
-	j = j + 1
+sample_size = X_test.shape[0]
+all_scores = np.zeros(names.shape[0], names.shape[0])
+
+for k in range(0, sample_size):
+	j = 0
+	for name in names:
+		ldafy_test[name[0][0]] = T[name[0][0]]
+		all_scores[k][j] = my_cca.score(X_test[k], T[name[0][0]])
+		j = j + 1
 
 #concatenated projection :
 # P=XX*Wx*D
