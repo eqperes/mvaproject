@@ -35,7 +35,7 @@ ldafy = np.array(ldafy)
 my_cca = CCA(n_components=15)
 my_cca.fit(X, ldafy)
 
-all_scores = np.zeros(names.shape[0], names.shape[0])
+all_scores = np.zeros((names.shape[0], names.shape[0]))
 for k in range(0, names.shape[0]):
 	j = 0
 	for name in names:
@@ -54,7 +54,7 @@ ldafy_test = {}
 names = img_features_test["names"]
 
 sample_size = X_test.shape[0]
-all_scores = np.zeros(names.shape[0], names.shape[0])
+all_scores = np.zeros((names.shape[0], names.shape[0]))
 
 for k in range(0, sample_size):
 	j = 0
