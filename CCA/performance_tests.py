@@ -6,10 +6,11 @@ import numpy as np
 from CCAbib import CCA2view
 import scipy.io as sio
 import pickle
+from sklearn.preprocessing import scale
 
 class PerfTests(object):
 
-	def __init__(self, path_train_view1, path_test_view1, path_view2, out_dim=200):
+	def __init__(self, path_train_view1, path_test_view1, path_view2):
 		train_view1 = sio.loadmat(path_train_view1)
 		test_view1 = sio.loadmat(path_test_view1)
 		view2 = pickle.load(open(path_view2, "rb"))
@@ -21,10 +22,11 @@ class PerfTests(object):
 			self._process(test_view1, view2)
 
 	def _process(self, set_view1, view2):
-		features1=np.zeros((set_view1.shape[0],set_view1[0,0].shape[2]))
-		for i in range(0,set_view1.shape[0]-1) :
-		    for j in range(0,set_view1[0,0].shape[2]-2) : 
-		        features1[i,j]=set_view1[i,0][0,0,j]
+		view1 = set_view1["features"]
+		features1=np.zeros((view1.shape[0],view1[0,0].shape[2]))
+		for i in range(0,view1.shape[0]-1) :
+		    for j in range(0,view1[0,0].shape[2]-2) : 
+		        features1[i,j]=view1[i,0][0,0,j]
 		features2 = []
 		names = set_view1["names"]
 		for name in names:
@@ -35,7 +37,41 @@ class PerfTests(object):
 
 	def CCAfy(self, out_dim):
 		self.cca = CCA2view(out_dim)
-		self.cca.fit(train_view1, train_view2)
+		self.cca.fit(self.train_view1, self.train_view2)
+
+	def score_matrix(self):
+		nsamples = self.test_view1.shape[0]
+		scores_matrix = np.zeros((nsamples, nsamples))
+		for i in range(0,nsamples):
+			dummy_view1 = self.test_view1[i]
+			dummy_view1 = np.tile(dummy_view1, (nsamples, 1))
+			scores_matrix[i] = self.cca.matching_score(\
+				dummy_view1, self.test_view2)
+		scores_matrix = scale(scores_matrix, axis=1)
+		return scores_matrix
+
+	def score_test(self, out_dim=200, rerun=False):
+		if rerun:
+			self.CCAfy(out_dim)
+		scores_matrix = self.score_matrix()
+		matching_score = np.mean(np.diag(scores_matrix))
+		random_score = np.mean(np.mean(scores_matrix))
+		return [matching_score, random_score]
+
+	def rank_test(self, out_dim=200, rerun=False):
+		if rerun:
+			self.CCAfy(out_dim)
+		scores_matrix = self.score_matrix()
+		argrank = np.argsort(scores_matrix, axis=1)
+		rank = np.argsort(argrank, axis=1)
+		return np.mean(np.diag(rank))
+
+
+
+
+
+
+
 
 
 
