@@ -35,8 +35,8 @@ class PerfTests(object):
 
 		return [features1, features2]
 
-	def CCAfy(self, out_dim):
-		self.cca = CCA2view(out_dim)
+	def CCAfy(self, out_dim, normalize=True):
+		self.cca = CCA2view(out_dim, normalize)
 		self.cca.fit(self.train_view1, self.train_view2)
 
 	def score_matrix(self):
@@ -50,17 +50,17 @@ class PerfTests(object):
 		scores_matrix = scale(scores_matrix, axis=1)
 		return scores_matrix
 
-	def score_test(self, out_dim=200, rerun=False):
+	def score_test(self, out_dim=200, rerun=False, normalize=True):
 		if rerun:
-			self.CCAfy(out_dim)
+			self.CCAfy(out_dim, normalize)
 		scores_matrix = self.score_matrix()
 		matching_score = np.mean(np.diag(scores_matrix))
 		random_score = np.mean(np.mean(scores_matrix))
 		return [matching_score, random_score]
 
-	def rank_test(self, out_dim=200, rerun=False):
+	def rank_test(self, out_dim=200, rerun=False, normalize=True):
 		if rerun:
-			self.CCAfy(out_dim)
+			self.CCAfy(out_dim, normalize)
 		scores_matrix = self.score_matrix()
 		argrank = np.argsort(scores_matrix, axis=1)
 		rank = np.argsort(argrank, axis=1)
