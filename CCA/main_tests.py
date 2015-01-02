@@ -9,5 +9,5 @@ perf = PerfTests(view1train_path, view1test_path, view2path)
 perf.CCAfy(1)
 
 for i in [1, 5, 10, 50, 100, 200, 500, 1000]:
-	print perf.score_test(i, False)
-	print perf.rank_test(i, False)
+	print perf.score_test(i, False, normalize=False)
+	print perf.rank_test(i, False, normalize=False)
