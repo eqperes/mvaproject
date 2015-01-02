@@ -45,6 +45,29 @@ class CaptionCorpus(object):
 		vector = self.lda.inference([document])[0][0]
 		return vector
 
+	def lda_corpus(self):
+		lda_dict = {}
+		for name in self.captions:
+			captions = self.captions[name]
+			vector = []
+			for caption in captions:
+				lda_caption = self._lda_vector(caption)
+				vector.append(lda_caption)
+			lda_dict[name] = np.mean(vector, axis=0)
+		return lda_dict
+
+	def w2v_corpus(self):
+		w2v_dict = {}
+		for name in self.captions:
+			captions = self.captions[name]
+			for caption in captions:
+				w2v_caption = self._w2v_document(caption)
+				if not name in w2v_dict:
+					w2v_dict[name] = w2v_caption
+				else:
+					w2v_dict[name] = w2v_dict[name] + w2v_caption
+		return w2v_dict
+
 	def lda_distance(self, document1, document2):
 		vector1 = self._lda_vector(document1)
 		vector2 = self._lda_vector(document2)
