@@ -56,6 +56,10 @@ class CaptionCorpus(object):
 			lda_dict[name] = np.mean(vector, axis=0)
 		return lda_dict
 
+	def w2v_pretrained(self, path_to_model):
+		self.w2v = Word2Vec.load_word2vec_format(\
+			path_to_model, binary=True)
+
 	def w2v_corpus(self):
 		w2v_dict = {}
 		for name in self.captions:
@@ -77,7 +81,12 @@ class CaptionCorpus(object):
 
 	def _w2v_document(self, document):
 		document = self._stop_document(document)
-		vectors = [self.w2v[word] for word in document]
+		vectors = []
+		for word in document:
+			try:
+				vectors.append(self.w2v[word])
+			except:
+				pass
 		return np.mean(vectors, 0)
 
 	def w2v_distance(self, document1, document2):
