@@ -53,6 +53,8 @@ class PerfTests(object):
 	def score_test(self, out_dim=200, rerun=False, normalize=True):
 		if rerun:
 			self.CCAfy(out_dim, normalize)
+		if not self.cca.out_dim == out_dim:
+			self.cca.out_dim = out_dim
 		scores_matrix = self.score_matrix()
 		matching_score = np.mean(np.diag(scores_matrix))
 		random_score = np.mean(np.mean(scores_matrix))
@@ -61,6 +63,8 @@ class PerfTests(object):
 	def rank_test(self, out_dim=200, rerun=False, normalize=True):
 		if rerun:
 			self.CCAfy(out_dim, normalize)
+		if not self.cca.out_dim == out_dim:
+			self.cca.out_dim = out_dim
 		scores_matrix = self.score_matrix()
 		argrank = np.argsort(scores_matrix, axis=1)
 		rank = np.argsort(argrank, axis=1)
